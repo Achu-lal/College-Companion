@@ -1,9 +1,8 @@
-import numpy as np
 import nltk
 import string
 import random
 from flask import Flask, render_template, request, jsonify
-from nltk.stem import PorterStemmer, WordNetLemmatizer
+from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -17,16 +16,13 @@ nltk.download('punkt')
 nltk.download('wordnet')
 
 sentence_tokens = nltk.sent_tokenize(raw_doc)
-word_tokens = nltk.word_tokenize(raw_doc)
 
 lemmatizer = WordNetLemmatizer()
-stemmer = PorterStemmer()
 
 def LemNormalize(text):
     tokens = nltk.word_tokenize(text.lower().translate(remove_punc_dict))
     lemmatized_tokens = [lemmatizer.lemmatize(token) for token in tokens]
-    stemmed_tokens = [stemmer.stem(token) for token in lemmatized_tokens]
-    return stemmed_tokens
+    return lemmatized_tokens
 
 remove_punc_dict = dict((ord(punct), None) for punct in string.punctuation)
 
@@ -38,7 +34,7 @@ def greet(sentence):
         if word.lower() in greet_inputs:
             return random.choice(greet_responses)
 
-def get_response(user_response):
+def get_response():
     robo1_response = ''
     TfidfVec = TfidfVectorizer(tokenizer=LemNormalize, stop_words='english')
     tfidf = TfidfVec.fit_transform(sentence_tokens)
@@ -73,9 +69,7 @@ def process_user_input():
                 return jsonify({'message': greet(user_input)})
             else:
                 sentence_tokens.append(user_input)
-                word_tokens.extend(nltk.word_tokenize(user_input))
-                final_words = list(set(word_tokens))
-                response = get_response(user_input)
+                response = get_response()
                 sentence_tokens.remove(user_input)
                 return jsonify({'message': response})
     else:
